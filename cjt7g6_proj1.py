@@ -40,9 +40,9 @@ def createData():
 
 def plotVals():
     df = createData()
-    x = df['Weight'].values
-    y = df['Height'].values
-    colors = ('orange', 'black')
+    y = df['Weight'].values
+    x = df['Height'].values
+    colors = ("pink", "blue", "purple")
     groups = ("red", "black")
 
     #Create a plot
@@ -50,7 +50,7 @@ def plotVals():
     ax = fig.add_subplot(1, 1, 1, facecolor='w')
 
     for color, group in zip(colors, groups):
-        ax.scatter(x, y, alpha=0.5, c=color, edgecolors='none', s=25, label=group)
+        ax.scatter(x, y, alpha=0.7, c=color, edgecolors='none', s=25, label=group)
 
     plt.title('Binary Classification')
     plt.show()
