@@ -112,6 +112,6 @@ def main():
     weights = [0.1, 0.1, 0.1]
     df = createData()
     #plotVals(df) #just to show that the data is linearly separable
-    trainModel(df, weights, 0.0000001, 0.0000001, 2000000, 0.30)
+    trainModel(df, weights, 0.0000001, 0.0000001, 2000000, 0.35)
 
 main()
