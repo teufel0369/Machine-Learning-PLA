@@ -4,14 +4,15 @@ import pandas as pd
 import random
 
 def createData():
+    '''create some empty list variables to put randomized data into'''
     x = []
     y = []
     d = []
 
     '''create some random values for x and y. if the y value > 0, tag it with a 1, otherwise tag it with a -1'''
     for i in range(100):
-        x1 = random.randint(-5, 5)
-        y1 = random.randint(-5, 5)
+        x1 = random.uniform(-5.0, 5.0)
+        y1 = random.uniform(-5.0, 5.0)
         x.append(x1)
         y.append(y1)
 
@@ -83,8 +84,8 @@ def trainModel(df, weights, constantC, constantK, maxIter):
                 '''update the weights'''
                 weights = weightsUpdate(weights, constantC, constantK, d[i], x[i], y[i])
                 numErrors += 1
-                print(discriminant) #debugging
-                print(d[i]) #debugging
+                print(discriminant)
+                print(d[i])
 
         numTurns += 1 #increase number of turns by 1 iteration
         print("Number of errors: " + str(numErrors))
@@ -94,8 +95,9 @@ def trainModel(df, weights, constantC, constantK, maxIter):
 
 
 def main():
-    weights = [0.0000001, 0.0000001, 0.0000001]
+    weights = [0.0, 0.0, 0.0]
     df = createData()
-    trainModel(df, weights, 0.001, 0.001, 1000000)
+    #plotVals(df) #just to show that the data is linearly separable
+    trainModel(df, weights, 0.00000, 0.00000, 1000000)
 
 main()
