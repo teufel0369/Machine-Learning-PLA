@@ -88,15 +88,11 @@ def trainModel(df, weights, constantC, constantK, maxIter, threshHold):
             if ((discriminant >= posThreshHoldFloor and discriminant <= posThreshHoldCeiling) or
                     (discriminant >= negThreshHoldFloor and discriminant <= negThreshHoldCeiling)):
                 truePosNeg += 1
-                print(discriminant)
-                print(d[i]) #debugging
-
+                #weights = weightsUpdate(weights, constantC, constantK, d[i], x[i], y[i])
             else:
                 '''update the weights'''
                 weights = weightsUpdate(weights, constantC, constantK, d[i], x[i], y[i])
                 falsePosNeg += 1
-                print(discriminant)
-                print(d[i])
 
 
         numTurns += 1 #increase number of turns by 1 iteration
@@ -105,10 +101,17 @@ def trainModel(df, weights, constantC, constantK, maxIter, threshHold):
         errorRate = falsePosNeg / len(x) * 100
         print("Error rate: " + str(errorRate) + "%")
 
+
+        '''add stop conditions'''
+        if (errorRate < 25):
+            break
+        else:
+            continue
+
 def main():
-    weights = [0, 0, 0]
+    weights = [0.1, 0.1, 0.1]
     df = createData()
-    plotVals(df) #just to show that the data is linearly separable
-    #trainModel(df, weights, 0.0000001, 0.0000001, 2000000, 0.30)
+    #plotVals(df) #just to show that the data is linearly separable
+    trainModel(df, weights, 0.0000001, 0.0000001, 2000000, 0.30)
 
 main()
