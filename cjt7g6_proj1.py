@@ -1,60 +1,101 @@
-import inline as inline
-import matplotlib
-import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
-from matplotlib import rcParams
 import numpy as np
-from numpy.random import seed
+import pandas as pd
 import random
 
-#set the size of the plot
-rcParams["figure.figsize"] = 10, 10
-
 def createData():
-    df = pd.DataFrame() # create an empty dataframe
+    x = []
+    y = []
+    d = []
 
-    randVals = [] #empty list for the random values
-    for i in range(999):
-        x = random.randint(0, 150) #create a random number
-        randVals.append(x) #append it to the list 1000 times
+    '''create some random values for x and y. if the y value > 0, tag it with a 1, otherwise tag it with a -1'''
+    for i in range(100):
+        x1 = random.randint(-5, 5)
+        y1 = random.randint(-5, 5)
+        x.append(x1)
+        y.append(y1)
 
-    df['Weight'] = randVals #assign the list to the dataframe
-
-
-    height = [] #empty list for the tag values
-    classifier = [] #empty list for the classification
-    for row in df['Weight']: #assigning binary classifiers to the pandas dataframe
-        if row > 96:
-            height.append(random.randint(0, 50)) #make a random small height
-            classifier.append("Red") #make a classification
+        if y[i] > 0:
+            d1 = 1
         else:
-            height.append(random.randint(51, 100)) #make a random big height
-            classifier.append("Black") #make a classification
+            d1 = -1
 
-    df['Height'] = height #assign the list to the dataframe
-    df['Classification'] =classifier #assign the answers to the dataframe
-    print(df)
+        d.append(d1)
+
+    '''create an empty dataframe and stick all the lists in there'''
+    df = pd.DataFrame()
+    df['X'] = x
+    df['Y'] = y
+    df['Class'] = d
 
     return df
 
-def plotVals():
-    df = createData()
-    y = df['Weight'].values
-    x = df['Height'].values
-    colors = ("pink", "blue", "purple")
-    groups = ("red", "black")
+'''This function will plot the linearly separable data'''
+def plotVals(df):
+    x = df['X'].values
+    y = df['Y'].values
 
-    #Create a plot
+    '''create a plot and two subplots for -1 and 1'''
     fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1, facecolor='w')
+    ax1 = fig.add_subplot(111)
+    ax2 = fig.add_subplot(111)
 
-    for color, group in zip(colors, groups):
-        ax.scatter(x, y, alpha=0.7, c=color, edgecolors='none', s=25, label=group)
-
-    plt.title('Binary Classification')
+    '''iterate over the x,y values and tag and plot them appropriately'''
+    for index in range(len(x)):
+        if y[index] > 0:
+            ax1.scatter(x[index], y[index], alpha=0.5, c='red', edgecolors='none', s=25, label='red')
+        else:
+            ax2.scatter(x[index], y[index], alpha=0.5, c='black', edgecolors='none', s=25, label='black')
+    plt.title("Perceptron Learning Algorithm Randomized Data")
     plt.show()
 
-plotVals()
+
+'''This function will update the weights. 3 weights; 2 for the points themselves and 1 for bias'''
+def weightsUpdate(weights, constantC, constantK, classificationd, x, y):
+    weights[0] = weights[0] + constantC * classificationd * constantK # w0 = w0 + cdk
+    weights[1] = weights[1] + constantC * classificationd * x #w1 = w1 + cdx
+    weights[2] = weights[2] + constantC * classificationd * y #w2 = w2 + cdy
+
+    return weights
+
+'''this function will train the weights to make a correct discriminant output'''
+def trainModel(df, weights, constantC, constantK, maxIter):
+    #grab the values in a list
+    x = df['X'].values
+    y = df['Y'].values
+    d = df['Class'].values
+
+    #define some variables to keep track
+    numTurns = 0
+    numErrors = 0
+
+    while numTurns < maxIter:
+        errorRate = 0
+        numErrors = 0
 
 
+        for i in range(len(x)):
+            ''' calculate the discriminant D = w0 + w1*xi + w2*yi '''
+            discriminant = weights[0] + (weights[1] * x[i]) + (weights[2] * y[i])
+
+            '''if the discriminant is not correct when compared to the correct output'''
+            if discriminant != d[i]:
+                '''update the weights'''
+                weights = weightsUpdate(weights, constantC, constantK, d[i], x[i], y[i])
+                numErrors += 1
+                print(discriminant) #debugging
+                print(d[i]) #debugging
+
+        numTurns += 1 #increase number of turns by 1 iteration
+        print("Number of errors: " + str(numErrors))
+        errorRate = numErrors / len(x) * 100
+        print("Error rate: " + str(errorRate) + "%")
+        print("Weights: " + str(weights)) #debugging
+
+
+def main():
+    weights = [0.0000001, 0.0000001, 0.0000001]
+    df = createData()
+    trainModel(df, weights, 0.001, 0.001, 1000000)
+
+main()
