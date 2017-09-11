@@ -10,9 +10,9 @@ def createData():
     d = []
 
     '''create some random values for x and y. if the y value > 0, tag it with a 1, otherwise tag it with a -1'''
-    for i in range(100):
-        x1 = random.uniform(-5.0, 5.0)
-        y1 = random.uniform(-5.0, 5.0)
+    for i in range(1000):
+        x1 = random.uniform(-10.0, 10.0)
+        y1 = random.uniform(-10.0, 10.0)
         x.append(x1)
         y.append(y1)
 
@@ -60,7 +60,7 @@ def weightsUpdate(weights, constantC, constantK, classificationd, x, y):
     return weights
 
 '''this function will train the weights to make a correct discriminant output'''
-def trainModel(df, weights, constantC, constantK, maxIter):
+def trainModel(df, weights, constantC, constantK, maxIter, threshHold):
     #grab the values in a list
     x = df['X'].values
     y = df['Y'].values
@@ -68,36 +68,47 @@ def trainModel(df, weights, constantC, constantK, maxIter):
 
     #define some variables to keep track
     numTurns = 0
-    numErrors = 0
 
     while numTurns < maxIter:
         errorRate = 0
-        numErrors = 0
+        falsePosNeg = 0
+        truePosNeg = 0
 
+        '''assign som threshhold values. must accomodate for slight variance.'''
+        posThreshHoldCeiling = 1 + threshHold
+        posThreshHoldFloor = 1 - threshHold
+        negThreshHoldFloor = -1 - threshHold
+        negThreshHoldCeiling = -1 + threshHold
 
         for i in range(len(x)):
             ''' calculate the discriminant D = w0 + w1*xi + w2*yi '''
             discriminant = weights[0] + (weights[1] * x[i]) + (weights[2] * y[i])
 
             '''if the discriminant is not correct when compared to the correct output'''
-            if discriminant != d[i]:
+            if ((discriminant >= posThreshHoldFloor and discriminant <= posThreshHoldCeiling) or
+                    (discriminant >= negThreshHoldFloor and discriminant <= negThreshHoldCeiling)):
+                truePosNeg += 1
+                print(discriminant)
+                print(d[i]) #debugging
+
+            else:
                 '''update the weights'''
                 weights = weightsUpdate(weights, constantC, constantK, d[i], x[i], y[i])
-                numErrors += 1
+                falsePosNeg += 1
                 print(discriminant)
                 print(d[i])
 
-        numTurns += 1 #increase number of turns by 1 iteration
-        print("Number of errors: " + str(numErrors))
-        errorRate = numErrors / len(x) * 100
-        print("Error rate: " + str(errorRate) + "%")
-        print("Weights: " + str(weights)) #debugging
 
+        numTurns += 1 #increase number of turns by 1 iteration
+        print("Number of False Positive/Negative: " + str(falsePosNeg))
+        print("Number of True Positive/Negative: " + str(truePosNeg))
+        errorRate = falsePosNeg / len(x) * 100
+        print("Error rate: " + str(errorRate) + "%")
 
 def main():
-    weights = [0.0, 0.0, 0.0]
+    weights = [0, 0, 0]
     df = createData()
-    #plotVals(df) #just to show that the data is linearly separable
-    trainModel(df, weights, 0.00000, 0.00000, 1000000)
+    plotVals(df) #just to show that the data is linearly separable
+    #trainModel(df, weights, 0.0000001, 0.0000001, 2000000, 0.30)
 
 main()
