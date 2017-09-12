@@ -90,37 +90,39 @@ def trainModel(df, weights, constantC, constantK, maxIter):
         truePosNeg = 0
 
         for i in range(len(x)):
+
             #calculate the discriminant
             discriminant = weights[0] + (weights[1] * x[i]) + (weights[2] * y[i])
 
-            if(isPos(discriminant) and d[i] == 1):
-                truePosNeg += 1
+            if(isPos(discriminant) and d[i] == 1): #if sign(D) == d
+                truePosNeg += 1 #add one to the successes
 
             elif(isPos(discriminant) == False and d[i] == -1):
                 truePosNeg += 1
 
-            else:
-                falsePosNeg += 1
-                weights = weightsUpdate(weights, constantC, constantK, d[i], x[i], y[i])
+            else: #if sign(D) != d
+                falsePosNeg += 1 #add one to the errors
+                weights = weightsUpdate(weights, constantC, constantK, d[i], x[i], y[i]) #update the weights
 
+        '''take some stats about the iteration and print some updates'''
         numTurns += 1 #increase number of turns by 1 iteration
-        print("Number of False Positive/Negative: " + str(falsePosNeg))
+        print("\nNumber of False Positive/Negative: " + str(falsePosNeg))
         print("Number of True Positive/Negative: " + str(truePosNeg))
         localErrorRate = falsePosNeg / len(x) * 100
         successRate = truePosNeg / len(x) * 100
         print("Error rate: " + str(localErrorRate) + "%")
         print("Success rate: " + str(successRate) + "%")
 
-
+        '''if the success rate reaches 100%, print the stats about the weights and number
+        of turns then break out of the loop. Otherwise, continue until 100% success rate is reached.'''
         if successRate == 100:
             print("\n\nTrained Weight Values: " + str(weights))
             print("Number of iterations: " + str(numTurns))
             break
-
         else:
             continue
 
-    return weights
+    return weights #return the trained weights
 
 '''this function will test the accuracy of the model with one pass through the dataset'''
 def testModel(weights):
@@ -141,7 +143,7 @@ def testModel(weights):
 
         D.append(discriminant) #append the value to the list
 
-    '''iterate through the list and let's see how we did'''
+    '''iterate through the list and see how the model performed'''
     for x in range(len(d)):
         if(isPos(D[i]) and d[i] == 1):
             numCorrect += 1
@@ -158,10 +160,11 @@ def testModel(weights):
     resultsDF['Expected Output'] = d
     print(resultsDF)
 
+
 def main():
     weights = [0.00000, 0.00000, 0.00000]
     df = createData()
-    #plotVals(df) #just to show that the data is linearly separable
+    plotVals(df) #just to show that the data is linearly separable
     weights = trainModel(df, weights, 0.01, 1, 1000000)
     testModel(weights)
 
