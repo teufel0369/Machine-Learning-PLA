@@ -2,6 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import random
+import os
+
+'''Global file I/O'''
+modelLog = open('modelLog.txt', 'w')
 
 def createData():
     '''create some empty list variables to put randomized data into'''
@@ -23,7 +27,22 @@ def createData():
 
         d.append(d1)
 
-    '''create an empty dataframe and stick all the lists in there'''
+    for count in range(50):
+        randChoice = random.randint(0, 1)
+        x1 = random.uniform(-10, 5)
+        y1 = random.uniform(-10, 5)
+        x.append(x1)
+        y.append(y1)
+
+        if(randChoice == 1):
+            d1 = 1
+        else:
+            d1 = -1
+
+        d.append(d1)
+
+
+
     df = pd.DataFrame()
     df['X'] = x
     df['Y'] = y
@@ -39,9 +58,10 @@ def isPos(val):
         return False
 
 '''This function will plot the linearly separable data'''
-def plotVals(df):
+def plotVals(df,):
     x = df['X'].values
     y = df['Y'].values
+    d = df['Class'].values
 
     '''create a plot and two subplots for -1 and 1'''
     fig = plt.figure()
@@ -50,7 +70,7 @@ def plotVals(df):
 
     '''iterate over the x,y values and tag and plot them appropriately'''
     for index in range(len(x)):
-        if y[index] > 0:
+        if d[index] == -1:
             ax1.scatter(x[index], y[index], alpha=0.5, c='red', edgecolors='none', s=25, label='red')
         else:
             ax2.scatter(x[index], y[index], alpha=0.5, c='black', edgecolors='none', s=25, label='black')
@@ -66,11 +86,6 @@ def weightsUpdate(weights, constantC, constantK, classificationd, x, y):
 
     return weights
 
-'''NOTE: Write in loop controls for training the model
-1) if the errorRate does not continually improve, spit out the model weights
-2) if the errorRate reaches 0, spit out the model weights
-3) TBD'''
-
 '''this function will train the weights to make a correct discriminant output'''
 def trainModel(df, weights, constantC, constantK, maxIter):
     #grab the values in a list
@@ -82,6 +97,7 @@ def trainModel(df, weights, constantC, constantK, maxIter):
     #define some variables to keep track
     numTurns = 0
     numWeightUpdates = 0
+    runningSuccessRate = []
 
     while numTurns < maxIter:
         localErrorRate = 0
@@ -103,21 +119,37 @@ def trainModel(df, weights, constantC, constantK, maxIter):
             else: #if sign(D) != d
                 falsePosNeg += 1 #add one to the errors
                 weights = weightsUpdate(weights, constantC, constantK, d[i], x[i], y[i]) #update the weights
+                numWeightUpdates += 1
 
         '''take some stats about the iteration and print some updates'''
         numTurns += 1 #increase number of turns by 1 iteration
-        print("\nNumber of False Positive/Negative: " + str(falsePosNeg))
+        print("\n\nNumber of False Positive/Negative: " + str(falsePosNeg))
+        modelLog.write("\nNumber of False Positive/Negative: " + str(falsePosNeg))
         print("Number of True Positive/Negative: " + str(truePosNeg))
+        modelLog.write("\nNumber of True Positive/Negative: " + str(truePosNeg))
         localErrorRate = falsePosNeg / len(x) * 100
         successRate = truePosNeg / len(x) * 100
         print("Error rate: " + str(localErrorRate) + "%")
+        modelLog.write("\nError rate: " + str(localErrorRate) + "%")
         print("Success rate: " + str(successRate) + "%")
+        modelLog.write("\nSuccess rate: " + str(successRate) + "%" + "\n")
+        print("Number of iterations: " + str(numTurns))
+        runningSuccessRate.append(successRate)
+
+        '''***find a way to make it stop here using a running success rate not improving of the course of
+        x amount of iterations****'''
 
         '''if the success rate reaches 100%, print the stats about the weights and number
         of turns then break out of the loop. Otherwise, continue until 100% success rate is reached.'''
         if successRate == 100:
-            print("\n\nTrained Weight Values: " + str(weights))
+            print("\nLine equation: " + lineEquation(weights))
+            modelLog.write("\nLine equation: " + lineEquation(weights))
+            print("Trained Weight Values: " + str(weights))
+            modelLog.write("\nTrained Weight Values: " + str(weights))
+            print("Number of weight updates: " + str(numWeightUpdates))
+            modelLog.write("\nNumber of weight updates: " + str(numWeightUpdates))
             print("Number of iterations: " + str(numTurns))
+            modelLog.write("\nNumber of iterations: " + str(numTurns) + "\n")
             break
         else:
             continue
@@ -140,32 +172,48 @@ def testModel(weights):
 
     for i in range(len(x)):
         discriminant = weights[0] + (weights[1] * x[i]) + (weights[2] * y[i]) #make the prediction
-
-        D.append(discriminant) #append the value to the list
-
-    '''iterate through the list and see how the model performed'''
-    for x in range(len(d)):
-        if(isPos(D[i]) and d[i] == 1):
-            numCorrect += 1
-        elif(isPos(D[i]) == False and d[i] == -1):
-            numCorrect += 1
+        if(discriminant >= 0):
+            D.append(1)
         else:
-            numErrors += 1
-
-    print("\nNumber of errors on test data: " + str(numErrors))
-    print("Error Rate: " + str(numErrors / len(d)))
+            D.append(-1)
 
     resultsDF = pd.DataFrame()
     resultsDF['Predicted Output'] = D
     resultsDF['Expected Output'] = d
-    print(resultsDF)
 
+    D1 = resultsDF['Predicted Output'].values
+    d1 = resultsDF['Expected Output'].values
+
+    for i in range(len(d1)):
+        if d1[i] != D[i]:
+            numErrors += 1
+
+    errorRate = numErrors / 1050 * 100
+    print("\nNumber of errors on test data: " + str(numErrors))
+    modelLog.write("\nNumber of errors on test data: " + str(numErrors) + "\n")
+    print("Error Rate: " + str(errorRate) + "\n")
+    modelLog.write("Error Rate: " + str(errorRate) + "\n")
+    print(resultsDF)
+    modelLog.write("\n" + str(resultsDF))
+
+'''create function to give equation of a line --->  y = mx + b '''
+def lineEquation(weights):
+    '''Ax + By + c = 0 ---> m = -A/B ---> y = -A/B - c'''
+    c = weights[0]
+    A = weights[1]
+    B = weights[2]
+
+    #create the string for equation of the line
+    string = "y = " + str(A * -1) + " / " + str(B) + " + " + str(c * -1)
+
+    return string
 
 def main():
     weights = [0.00000, 0.00000, 0.00000]
     df = createData()
     plotVals(df) #just to show that the data is linearly separable
-    weights = trainModel(df, weights, 0.01, 1, 1000000)
+    weights = trainModel(df, weights, 0.01, 1, 10000)
     testModel(weights)
+    modelLog.close()
 
 main()
