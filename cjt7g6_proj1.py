@@ -1,10 +1,3 @@
-'''
-Author: Chris Thompson
-Project Description: Implementation of the Perceptron Learning Algorithm in Python. The model is trained on the data
-points and then tested on a completely different data set for evaluation.
-'''
-
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
