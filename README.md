@@ -1,6 +1,6 @@
 # Perceptron Learning Algorithm Tutorial
 
-The basis of the Perceptron Learning Algorithm (PLA), and binary classification for that matter, revolves around the idea that there is no assumption on how past (the training data) is related to the future (the test data), then prediction is impossible.
+The basis of the Perceptron Learning Algorithm (PLA), and binary classification for that matter, revolves around the idea that if there is no assumption on how past (the training data) is related to the future (the test data), then prediction is impossible.
 
 The relationship in this case is that both past and future observations are both sampled independently from the same distribution.
 
