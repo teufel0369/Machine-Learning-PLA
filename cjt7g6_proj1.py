@@ -1,46 +1,69 @@
+'''
+Author: Chris Thompson
+Project Description: Implementation of the Perceptron Learning Algorithm in Python. The model is trained on the data
+points and then tested on a completely different data set for evaluation.
+'''
+
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import random
 import os
 
-'''Global file I/O'''
+'''Globals'''
 modelLog = open('modelLog.txt', 'w')
 
-def createData():
+
+def createTrainingData():
     '''create some empty list variables to put randomized data into'''
     x = []
     y = []
     d = []
 
     '''create some random values for x and y. if the y value > 0, tag it with a 1, otherwise tag it with a -1'''
-    for i in range(1000):
-        x1 = random.uniform(-10, 10)
-        y1 = random.uniform(-10, 10)
+    for i in range(50):
+        x1 = random.uniform(-5, 5)
         x.append(x1)
-        y.append(y1)
 
-        if y[i] > 0:
+        if x[i] < 0:
+            y1 = random.uniform(0, 5)
             d1 = 1
+            y.append(y1)
         else:
+            y1 = random.uniform(-5, 0)
             d1 = -1
+            y.append(y1)
 
         d.append(d1)
 
-    for count in range(50):
-        randChoice = random.randint(0, 1)
-        x1 = random.uniform(-10, 5)
-        y1 = random.uniform(-10, 5)
-        x.append(x1)
-        y.append(y1)
+    df = pd.DataFrame()
+    df['X'] = x
+    df['Y'] = y
+    df['Class'] = d
 
-        if(randChoice == 1):
+    return df
+
+'''create the test data for the model'''
+def createTestData():
+    x = []
+    y = []
+    d = []
+
+    for i in range(30):
+        x1 = random.uniform(-5, 5)
+        x.append(x1)
+
+        if x[i] < 0:
+            y1 = random.uniform(0, 5)
             d1 = 1
+            y.append(y1)
         else:
+            y1 = random.uniform(-5, 0)
             d1 = -1
+            y.append(y1)
 
         d.append(d1)
-
 
 
     df = pd.DataFrame()
@@ -71,9 +94,9 @@ def plotVals(df,):
     '''iterate over the x,y values and tag and plot them appropriately'''
     for index in range(len(x)):
         if d[index] == -1:
-            ax1.scatter(x[index], y[index], alpha=0.5, c='red', edgecolors='none', s=25, label='red')
+            ax1.scatter(x[index], y[index], alpha=0.7, c='red', edgecolors='none', s=25, label='red')
         else:
-            ax2.scatter(x[index], y[index], alpha=0.5, c='black', edgecolors='none', s=25, label='black')
+            ax2.scatter(x[index], y[index], alpha=0.7, c='black', edgecolors='none', s=25, label='black')
     plt.title("Perceptron Learning Algorithm Randomized Data")
     plt.show()
 
@@ -92,7 +115,6 @@ def trainModel(df, weights, constantC, constantK, maxIter):
     x = df['X'].values
     y = df['Y'].values
     d = df['Class'].values
-    globalErrorRate = 0
 
     #define some variables to keep track
     numTurns = 0
@@ -136,11 +158,9 @@ def trainModel(df, weights, constantC, constantK, maxIter):
         print("Number of iterations: " + str(numTurns))
         runningSuccessRate.append(successRate)
 
-        '''***find a way to make it stop here using a running success rate not improving of the course of
-        x amount of iterations****'''
-
         '''if the success rate reaches 100%, print the stats about the weights and number
-        of turns then break out of the loop. Otherwise, continue until 100% success rate is reached.'''
+        of turns then break out of the loop, else if the model hasn't improved over 3 iterations break the loop
+         Otherwise, continue until 100% success rate is reached.'''
         if successRate == 100:
             print("\nLine equation: " + lineEquation(weights))
             modelLog.write("\nLine equation: " + lineEquation(weights))
@@ -154,11 +174,23 @@ def trainModel(df, weights, constantC, constantK, maxIter):
         else:
             continue
 
+    print("Error rate: " + str(localErrorRate) + "%")
+    modelLog.write("\nError rate: " + str(localErrorRate) + "%")
+    print("Success rate: " + str(successRate) + "%")
+    modelLog.write("\nSuccess rate: " + str(successRate) + "%" + "")
+    print("\nLine equation: " + lineEquation(weights))
+    modelLog.write("\nLine equation: " + lineEquation(weights))
+    print("Trained Weight Values: " + str(weights))
+    modelLog.write("\nTrained Weight Values: " + str(weights))
+    print("Number of weight updates: " + str(numWeightUpdates))
+    modelLog.write("\nNumber of weight updates: " + str(numWeightUpdates))
+    print("Number of iterations: " + str(numTurns))
+    modelLog.write("\nNumber of iterations: " + str(numTurns) + "\n")
+
     return weights #return the trained weights
 
 '''this function will test the accuracy of the model with one pass through the dataset'''
-def testModel(weights):
-    testDF = createData() #create data to test the model with
+def testModel(weights, testDF):
 
     #grab the values from the test data
     x = testDF['X'].values
@@ -185,16 +217,24 @@ def testModel(weights):
     d1 = resultsDF['Expected Output'].values
 
     for i in range(len(d1)):
-        if d1[i] != D[i]:
+        if d1[i] != D1[i]:
             numErrors += 1
+        else:
+            numCorrect += 1
 
-    errorRate = numErrors / 1050 * 100
+    errorRate = numErrors / len(d) * 100
+    successRate = numCorrect / len(d) * 100
     print("\nNumber of errors on test data: " + str(numErrors))
-    modelLog.write("\nNumber of errors on test data: " + str(numErrors) + "\n")
-    print("Error Rate: " + str(errorRate) + "\n")
-    modelLog.write("Error Rate: " + str(errorRate) + "\n")
+    modelLog.write("Number of errors on test data: " + str(numErrors))
+    print("Error Rate: " + str(errorRate) + "")
+    modelLog.write("Error Rate: " + str(errorRate) + "%")
+    print("Success Rate: " + str(successRate) + "")
+    modelLog.write("Success Rate: " + str(successRate) + "%")
+    print("Line equation: " + lineEquation(weights) + "\n")
+    modelLog.write("\nLine equation: " + lineEquation(weights))
     print(resultsDF)
     modelLog.write("\n" + str(resultsDF))
+
 
 '''create function to give equation of a line --->  y = mx + b '''
 def lineEquation(weights):
@@ -204,16 +244,18 @@ def lineEquation(weights):
     B = weights[2]
 
     #create the string for equation of the line
-    string = "y = " + str(A * -1) + " / " + str(B) + " + " + str(c * -1)
+    string = "y = " + str(A * -1) + "x / " + str(B) + " + " + str(c * -1)
 
     return string
 
 def main():
-    weights = [0.00000, 0.00000, 0.00000]
-    df = createData()
+    weights = [0.0000, 0.0000, 0.0000]
+    df = createTrainingData()
     plotVals(df) #just to show that the data is linearly separable
-    weights = trainModel(df, weights, 0.01, 1, 10000)
-    testModel(weights)
+    weights = trainModel(df, weights, 0.01, 1, 30000)
+    testDF = createTestData()
+    plotVals(testDF)
+    testModel(weights, testDF)
     modelLog.close()
 
 main()
